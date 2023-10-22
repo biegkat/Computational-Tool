@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ad_inferance_analysis &mdash; Bayesian Inference Analysis for Microtubule Length Distribution in Spindles Version 1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Bayesian Inference Analysis for Microtubule Length Distribution in Spindles
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Bayesian Inference Analysis for Microtubule Length Distribution in Spindles; Computational Tool</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Bayesian Inference Analysis for Microtubule Length Distribution in Spindles</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">ad_inferance_analysis</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for ad_inferance_analysis</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; This module performes a Baysian inferance analysis on artificial microtubule (MT) length data.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">pymc</span> <span class="k">as</span> <span class="nn">pm</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">arviz</span> <span class="k">as</span> <span class="nn">az</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">lpd_numpy</span> <span class="k">as</span> <span class="nn">lpd_n</span>
+<span class="kn">import</span> <span class="nn">lpd_pytensor</span> <span class="k">as</span> <span class="nn">lpd_p</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">arviz.labels</span> <span class="k">as</span> <span class="nn">azl</span>
+
+<span class="c1">########################################## FUNCTIONS ##########################################</span>
+
+<div class="viewcode-block" id="ad_load_data"><a class="viewcode-back" href="../ad_inferance_analysis.html#ad_inferance_analysis.ad_load_data">[docs]</a><span class="k">def</span> <span class="nf">ad_load_data</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Loads random p% of data (MT lengths) from DATA_PATH and scales it to the max length.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - p (float): Percent of the data (MT lengths) that is loaded to be used in the inferance. </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - dat (numpy.ndarray of float): p% of data (MT lengths) scaled to the max length.</span>
+<span class="sd">        - l_mu (float): Mean MT lenght in p% of data (MT lengths).</span>
+<span class="sd">        - l_max (float): Max MT lenght in p% of data (MT lengths).</span>
+<span class="sd">        - mt_nr (int): Number of MT in p% of data (MT lengths).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">dat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">DATA_PATH</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File not found: </span><span class="si">{</span><span class="n">DATA_PATH</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">dat</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">DATA_PATH</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">dat</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="n">l_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">dat</span><span class="p">)</span>
+    <span class="n">l_mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dat</span><span class="p">)</span>
+    <span class="n">mt_nr</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dat</span><span class="p">)</span>
+    <span class="n">dat</span> <span class="o">=</span> <span class="n">dat</span><span class="o">/</span><span class="n">l_max</span>
+    <span class="n">dat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">mt_nr</span><span class="o">*</span><span class="n">p</span><span class="p">),</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dat</span><span class="p">,</span> <span class="n">l_mu</span><span class="p">,</span> <span class="n">l_max</span><span class="p">,</span> <span class="n">mt_nr</span></div>
+
+<div class="viewcode-block" id="bin"><a class="viewcode-back" href="../ad_inferance_analysis.html#ad_inferance_analysis.bin">[docs]</a><span class="k">def</span> <span class="nf">bin</span><span class="p">(</span><span class="n">dat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sorts the data (MT lengths) in to bins of equal size distributed from (scaled) length 0 to 1 (as specified in lpd_numpy.py and lpd_pytensor.py).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - dat (numpy.ndarray of float): Array of MT lengths scaled to the max length.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - dat_b (numpy.ndarray of int): Binned data (MT lengths).</span>
+<span class="sd">        - b (numpy.ndarray of float): Bin locations on x-axis.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dat_b</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span><span class="n">bins</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">lpd_p</span><span class="o">.</span><span class="n">NL</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">dat_b</span><span class="p">,</span> <span class="n">b</span></div>
+
+<div class="viewcode-block" id="scale_r_max_dim"><a class="viewcode-back" href="../ad_inferance_analysis.html#ad_inferance_analysis.scale_r_max_dim">[docs]</a><span class="k">def</span> <span class="nf">scale_r_max_dim</span><span class="p">(</span><span class="n">r_max</span><span class="p">,</span><span class="n">l_max</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Performs paramerter transformation from of the turnover rate from r_max (-) to r (1/s).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - r_max (float): Non dimensional turnover rate (-), scaled with l_max.</span>
+<span class="sd">        - l_max (float): Max MT lenght in p% of data.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - r (float): Turnover rate (1/s).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gt_vg</span> <span class="o">=</span> <span class="n">load_gt</span><span class="p">()[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">r_max</span><span class="o">*</span><span class="n">gt_vg</span><span class="o">/</span><span class="n">l_max</span>
+    <span class="k">return</span> <span class="n">r</span></div>
+
+<div class="viewcode-block" id="scale_kappa_max_dim"><a class="viewcode-back" href="../ad_inferance_analysis.html#ad_inferance_analysis.scale_kappa_max_dim">[docs]</a><span class="k">def</span> <span class="nf">scale_kappa_max_dim</span><span class="p">(</span><span class="n">kappa_max</span><span class="p">,</span><span class="n">l_max</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Performs paramerter transformation of the severing rate from kappa_max (-) to kappa (1/µm s).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - kappa_max (float): Non dimensional severing rate (-), scaled with l_max.</span>
+<span class="sd">        - l_max (float): Max MT lenght in p% of data.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - kappa (float): Severing rate (1/µm s).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gt_vg</span> <span class="o">=</span> <span class="n">load_gt</span><span class="p">()[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">kappa</span> <span class="o">=</span> <span class="n">kappa_max</span><span class="o">*</span><span class="n">gt_vg</span><span class="o">/</span><span class="n">l_max</span><span class="o">**</span><span class="mi">2</span>
+    <span class="k">return</span> <span class="n">kappa</span></div>
+
+<div class="viewcode-block" id="scale_r_max_mu"><a class="viewcode-back" href="../ad_inferance_analysis.html#ad_inferance_analysis.scale_r_max_mu">[docs]</a><span class="k">def</span> <span class="nf">scale_r_max_mu</span><span class="p">(</span><span class="n">r_max</span><span class="p">,</span><span class="n">l_max</span><span class="p">,</span><span class="n">l_mu</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Performs paramerter transformation from of the turnover rate from r_max (-) to r_mu (-).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - r_max (float): Non dimensional turnover rate (-), scaled with l_max.</span>
+<span class="sd">        - l_max (float): Max MT lenght in p% of data.</span>
+<span class="sd">        - l_mu (float): Mean MT lenght in p% of data.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - r_mu (float): Non dimensional turnover rate (-), scaled with l_mu.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">r_mu</span> <span class="o">=</span> <span class="n">r_max</span><span class="o">*</span><span class="n">l_mu</span><span class="o">/</span><span class="n">l_max</span>
+    <span class="k">return</span> <span class="n">r_mu</span></div>
+
+<div class="viewcode-block" id="scale_kappa_max_mu"><a class="viewcode-back" href="../ad_inferance_analysis.html#ad_inferance_analysis.scale_kappa_max_mu">[docs]</a><span class="k">def</span> <span class="nf">scale_kappa_max_mu</span><span class="p">(</span><span class="n">kappa_max</span><span class="p">,</span><span class="n">l_max</span><span class="p">,</span><span class="n">l_mu</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Performs paramerter transformation from of the severing rate from kappa_max (-) to kappa_mu (-).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - kappa_max (float): Non dimensional severing rate (-), scaled with l_max.</span>
+<span class="sd">        - l_max (float): Max MT lenght in p% of data.</span>
+<span class="sd">        - l_mu (float): Mean MT lenght in p% of data.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - kappa_mu (float): Non dimensional severing rate (-), scaled with l_mu.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">kappa_mu</span> <span class="o">=</span> <span class="n">kappa_max</span><span class="o">*</span><span class="n">l_mu</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">l_max</span><span class="o">**</span><span class="mi">2</span>
+    <span class="k">return</span> <span class="n">kappa_mu</span></div>
+
+<div class="viewcode-block" id="load_gt"><a class="viewcode-back" href="../ad_inferance_analysis.html#ad_inferance_analysis.load_gt">[docs]</a><span class="k">def</span> <span class="nf">load_gt</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Loads the ground truth parameters from sim_documentation.dat.</span>
+
+<span class="sd">    Args: </span>
+<span class="sd">        - None</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - gt_r_max (float): Ground truth of non dimensional turnover rate (-), scaled with l_max.</span>
+<span class="sd">        - gt_kappa_max (float): Ground truth of non dimensional severing rate (-), scaled with l_max.</span>
+<span class="sd">        - gt_alpha (float): Ground truth of stability parameter (-).</span>
+<span class="sd">        - gt_vg (float): Ground truth of qrowth velocity (µm/s).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sim_doc</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()),</span> <span class="s2">&quot;out&quot;</span><span class="p">,</span> <span class="s2">&quot;sim_documentation.dat&quot;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">sim_doc</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">traget_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span>  <span class="n">traget_id</span> <span class="o">==</span> <span class="n">SIM_ID</span><span class="p">:</span>
+            <span class="n">gt_vg</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">11</span><span class="p">])</span>
+            <span class="n">gt_alpha</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+            <span class="n">gt_r_max</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">7</span><span class="p">])</span>
+            <span class="n">gt_kappa_max</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">8</span><span class="p">])</span>
+            <span class="k">break</span>
+    <span class="k">return</span> <span class="n">gt_r_max</span><span class="p">,</span> <span class="n">gt_kappa_max</span><span class="p">,</span> <span class="n">gt_alpha</span><span class="p">,</span> <span class="n">gt_vg</span></div>
+
+<div class="viewcode-block" id="ad_document"><a class="viewcode-back" href="../ad_inferance_analysis.html#ad_inferance_analysis.ad_document">[docs]</a><span class="k">def</span> <span class="nf">ad_document</span><span class="p">(</span><span class="n">inf_dat</span><span class="p">,</span><span class="n">mt_nr</span><span class="p">,</span><span class="n">l_max</span><span class="p">,</span><span class="n">l_mu</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Saves the inferred and other relevant parameters in out/ad_inf_documentation.dat.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - inf_dat (arviz.data.inference_data.InferenceData): Object that contains the samples.</span>
+<span class="sd">        - mt_nr (int): Number of MT in p% of data (MT lengths).</span>
+<span class="sd">        - l_mu (float): Mean MT lenght in p% of data (MT lengths).</span>
+<span class="sd">        - l_max (float): Max MT lenght in p% of data (MT lengths).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">az</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">inf_dat</span><span class="p">)</span>
+
+    <span class="n">variables</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;SIM_ID&quot;</span><span class="p">:</span> <span class="n">SIM_ID</span><span class="p">,</span>                                          <span class="c1">#Simulation ID</span>
+        <span class="s2">&quot;INF_ID&quot;</span><span class="p">:</span> <span class="n">INF_ID</span><span class="p">,</span>                                          <span class="c1">#Inferance ID</span>
+        <span class="s2">&quot;mt_nr&quot;</span><span class="p">:</span> <span class="n">mt_nr</span><span class="p">,</span>                                            <span class="c1">#Number of MT in p% of data                 </span>
+        <span class="s2">&quot;l_max (</span><span class="se">\u03BC</span><span class="s2">m)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">l_max</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span>                         <span class="c1">#Max MT lenght in p% of data               </span>
+        <span class="s2">&quot;l_mu (</span><span class="se">\u03BC</span><span class="s2">m)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">l_mu</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span>                           <span class="c1">#Mean MT lenght in p% of data</span>
+        <span class="s2">&quot;alpha_inf (-)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">),</span>                 <span class="c1">#Inferred stability parameter (-)</span>
+        <span class="s2">&quot;inf_r (1/s)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">),</span>                   <span class="c1">#Inferred turnover rate (1/s)</span>
+        <span class="s2">&quot;inf_kappa (1/</span><span class="se">\u03BC</span><span class="s2">m s)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">),</span>       <span class="c1">#Inferred severing rate (1/µm s)</span>
+        <span class="s2">&quot;inf_r_max (-)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">),</span>                 <span class="c1">#Inferred non dimensional turnover rate (-), scaled with l_max</span>
+        <span class="s2">&quot;inf_kappa_max (-)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">),</span>             <span class="c1">#Inferred non dimensional severing rate (-), scaled with l_max</span>
+        <span class="s2">&quot;inf_r_mu (-)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">),</span>                  <span class="c1">#Inferred non dimensional turnover rate (-), scaled with l_mu</span>
+        <span class="s2">&quot;inf_kappa_mu (-)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">),</span>              <span class="c1">#Inferred non dimensional severing rate (-), scaled with l_mu</span>
+        <span class="s2">&quot;Comment&quot;</span><span class="p">:</span> <span class="n">COMMENT</span>                                         <span class="c1">#Comment </span>
+    <span class="p">}</span>
+
+    <span class="n">out_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()),</span> <span class="s2">&quot;out&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">out_directory</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_directory</span><span class="p">,</span> <span class="s2">&quot;ad_inf_documentation.dat&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">variables</span><span class="p">[</span><span class="n">var</span><span class="p">])</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">]</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">headings</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">variables</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">variables</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">headings</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">values</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="ad_make_figures"><a class="viewcode-back" href="../ad_inferance_analysis.html#ad_inferance_analysis.ad_make_figures">[docs]</a><span class="k">def</span> <span class="nf">ad_make_figures</span><span class="p">(</span><span class="n">inf_dat</span><span class="p">,</span><span class="nb">type</span> <span class="o">=</span> <span class="s2">&quot;mu&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Saves figures (Pair, Posterior, Trace_alpha, Trace_r_max, Trace_kappa_max) in out/ad_inf_INF_ID.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - inf_dat (arviz.data.inference_data.InferenceData): Object that contains the samples.</span>
+<span class="sd">        - type (string): Indicates which sacling (&quot;max&quot;, &quot;mu&quot;, &quot;dim&quot;) will be used for the figures.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">FOLDER_PATH</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1">#Plot Pair</span>
+    <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span>
+        <span class="n">labeller</span> <span class="o">=</span> <span class="n">azl</span><span class="o">.</span><span class="n">MapLabeller</span><span class="p">(</span><span class="n">var_name_map</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;inf_r_max&quot;</span><span class="p">:</span> <span class="s2">&quot;R (-)&quot;</span><span class="p">,</span><span class="s2">&quot;inf_kappa_max&quot;</span><span class="p">:</span> <span class="s2">&quot;K (-)&quot;</span><span class="p">,</span><span class="s2">&quot;inf_alpha&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;$\alpha$ (-)&quot;</span><span class="p">})</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;inf_r_max&quot;</span><span class="p">,</span> <span class="s2">&quot;inf_kappa_max&quot;</span><span class="p">,</span> <span class="s2">&quot;inf_alpha&quot;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;mu&quot;</span><span class="p">:</span>
+        <span class="n">labeller</span> <span class="o">=</span> <span class="n">azl</span><span class="o">.</span><span class="n">MapLabeller</span><span class="p">(</span><span class="n">var_name_map</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;inf_r_mu&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;$\overline</span><span class="si">{R}</span><span class="s2"> (-)$&quot;</span><span class="p">,</span><span class="s2">&quot;inf_kappa_mu&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;$\overline</span><span class="si">{K}</span><span class="s2"> (-)$&quot;</span><span class="p">,</span><span class="s2">&quot;inf_alpha&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;$\alpha$ (-)&quot;</span><span class="p">})</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;inf_r_mu&quot;</span><span class="p">,</span> <span class="s2">&quot;inf_kappa_mu&quot;</span><span class="p">,</span> <span class="s2">&quot;inf_alpha&quot;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span> 
+        <span class="n">labeller</span> <span class="o">=</span> <span class="n">azl</span><span class="o">.</span><span class="n">MapLabeller</span><span class="p">(</span><span class="n">var_name_map</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;inf_r&quot;</span><span class="p">:</span> <span class="s2">&quot;r (1/s)&quot;</span><span class="p">,</span><span class="s2">&quot;inf_kappa&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;$\kappa (1/\mu m s)$&quot;</span><span class="p">,</span><span class="s2">&quot;inf_alpha&quot;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;$\alpha (-)$&quot;</span><span class="p">})</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;inf_r&quot;</span><span class="p">,</span> <span class="s2">&quot;inf_kappa&quot;</span><span class="p">,</span> <span class="s2">&quot;inf_alpha&quot;</span><span class="p">]</span>
+    
+    <span class="n">pm</span><span class="o">.</span><span class="n">plot_pair</span><span class="p">(</span><span class="n">inf_dat</span><span class="p">,</span> 
+                    <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;kde&quot;</span><span class="p">,</span>
+                    <span class="n">marginals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">point_estimate</span><span class="o">=</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+                    <span class="n">labeller</span><span class="o">=</span><span class="n">labeller</span><span class="p">,</span>
+                    <span class="n">var_names</span><span class="o">=</span><span class="n">variables</span><span class="p">,</span>
+                    <span class="n">divergences</span><span class="o">=</span><span class="kc">False</span><span class="p">,)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">FOLDER_PATH</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Pair_</span><span class="si">{</span><span class="nb">type</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1">#Plot Posterior</span>
+    <span class="n">az</span><span class="o">.</span><span class="n">plot_posterior</span><span class="p">(</span><span class="n">inf_dat</span><span class="p">,</span>
+                    <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;kde&quot;</span><span class="p">,</span> 
+                    <span class="n">labeller</span><span class="o">=</span><span class="n">labeller</span><span class="p">,</span>
+                    <span class="n">var_names</span><span class="o">=</span><span class="n">variables</span><span class="p">,</span>
+                    <span class="n">hdi_prob</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">FOLDER_PATH</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Posterior_</span><span class="si">{</span><span class="nb">type</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1">#Plot Trace_alpha</span>
+    <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span> 
+        <span class="n">az</span><span class="o">.</span><span class="n">plot_trace</span><span class="p">(</span><span class="n">inf_dat</span><span class="p">,</span>
+                        <span class="n">var_names</span><span class="o">=</span><span class="n">var</span><span class="p">,</span> 
+                        <span class="n">legend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">labeller</span><span class="o">=</span><span class="n">labeller</span><span class="p">,</span>
+                        <span class="n">divergences</span><span class="o">=</span><span class="kc">False</span><span class="p">,)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">FOLDER_PATH</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Trace_</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="nb">type</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">))</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="ad_make_pdist"><a class="viewcode-back" href="../ad_inferance_analysis.html#ad_inferance_analysis.ad_make_pdist">[docs]</a><span class="k">def</span> <span class="nf">ad_make_pdist</span><span class="p">(</span><span class="n">inf_dat</span><span class="p">,</span><span class="n">dat_b</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">l_max</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Saves figures (Pdist, Error) in out/ad_inf_INF_ID.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - inf_dat (arviz.data.inference_data.InferenceData): Object that contains the samples.</span>
+<span class="sd">        - dat_b (numpy.ndarray of int): Binned data (MT lengths).</span>
+<span class="sd">        - b (numpy.ndarray of float): Position of bins.</span>
+<span class="sd">        - l_max (float): Max MT lenght in p% of data (MT lengths).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">FOLDER_PATH</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="c1">#Plot Pdist</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">az</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">inf_dat</span><span class="p">)</span>
+    <span class="n">inf_alpha</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">inf_r_max</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">inf_kappa_max</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">inf</span> <span class="o">=</span> <span class="n">lpd_n</span><span class="o">.</span><span class="n">pdist</span><span class="p">(</span><span class="n">inf_r_max</span><span class="p">,</span> <span class="n">inf_kappa_max</span><span class="p">,</span> <span class="n">inf_alpha</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lpd_n</span><span class="o">.</span><span class="n">l</span><span class="o">*</span><span class="n">l_max</span><span class="p">,</span><span class="n">inf</span><span class="o">/</span><span class="nb">sum</span><span class="p">(</span><span class="n">inf</span><span class="o">*</span><span class="n">lpd_n</span><span class="o">.</span><span class="n">delta</span><span class="o">*</span><span class="n">l_max</span><span class="p">),</span> <span class="s2">&quot;--r&quot;</span><span class="p">,</span><span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;Inferred distribution&quot;</span><span class="p">)</span>
+
+    <span class="n">gt_r_max</span><span class="p">,</span> <span class="n">gt_kappa_max</span><span class="p">,</span> <span class="n">gt_alpha</span><span class="p">,</span> <span class="n">gt_vg</span> <span class="o">=</span> <span class="n">load_gt</span><span class="p">()</span>
+    <span class="n">gt</span> <span class="o">=</span> <span class="n">lpd_n</span><span class="o">.</span><span class="n">pdist</span><span class="p">(</span><span class="n">gt_r_max</span><span class="p">,</span> <span class="n">gt_kappa_max</span><span class="p">,</span> <span class="n">gt_alpha</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lpd_n</span><span class="o">.</span><span class="n">l</span><span class="o">*</span><span class="n">l_max</span><span class="p">,</span><span class="n">gt</span><span class="o">/</span><span class="nb">sum</span><span class="p">(</span><span class="n">gt</span><span class="o">*</span><span class="n">lpd_n</span><span class="o">.</span><span class="n">delta</span><span class="o">*</span><span class="n">l_max</span><span class="p">),</span> <span class="s2">&quot;-b&quot;</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;Ground truth&quot;</span><span class="p">)</span>
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">l_max</span><span class="p">,</span><span class="n">dat_b</span><span class="o">/</span><span class="nb">sum</span><span class="p">(</span><span class="n">dat_b</span><span class="o">*</span><span class="n">lpd_n</span><span class="o">.</span><span class="n">delta</span><span class="o">*</span><span class="n">l_max</span><span class="p">),</span> <span class="s2">&quot;.g&quot;</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s2">&quot;Binned data&quot;</span><span class="p">)</span> 
+
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Length l $(\mu m)$&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;$\phi(l)$&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">FOLDER_PATH</span><span class="p">,</span> <span class="s2">&quot;Pdist.png&quot;</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1">#Plot Error</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="p">(</span><span class="n">inf</span><span class="o">-</span><span class="n">gt</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">lpd_n</span><span class="o">.</span><span class="n">l</span><span class="o">*</span><span class="n">l_max</span><span class="p">,</span><span class="n">error</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Length l $(\mu m)$&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Squared error&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">FOLDER_PATH</span><span class="p">,</span> <span class="s2">&quot;Error.png&quot;</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+<span class="c1">########################################## MAIN ##########################################</span>
+
+<span class="c1">#### ENTER DATA HERE  ####</span>
+<span class="n">SIM_ID</span> <span class="o">=</span> <span class="s2">&quot;sim_SIM_ID&quot;</span>
+<span class="n">COMMENT</span> <span class="o">=</span> <span class="s2">&quot;Here could be your comment.&quot;</span>
+
+<span class="c1">### Make paths ###</span>
+<span class="c1">#INF_ID = &quot;ad_inf_&quot; + datetime.datetime.now().strftime(&quot;%y%m%d%H%M%S&quot;)</span>
+<span class="n">INF_ID</span> <span class="o">=</span> <span class="s2">&quot;ad_inf_INF_ID&quot;</span>
+<span class="n">DATA_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()),</span> <span class="sa">f</span><span class="s2">&quot;out/</span><span class="si">{</span><span class="n">SIM_ID</span><span class="si">}</span><span class="s2">/simulation/artifical_data.dat&quot;</span><span class="p">)</span>
+<span class="n">FOLDER_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()),</span> <span class="s2">&quot;out&quot;</span><span class="p">,</span> <span class="n">INF_ID</span><span class="p">)</span>
+
+<span class="c1">### Load and bin data ####</span>
+<span class="n">dat</span><span class="p">,</span> <span class="n">l_mu</span><span class="p">,</span> <span class="n">l_max</span><span class="p">,</span> <span class="n">mt_nr</span> <span class="o">=</span> <span class="n">ad_load_data</span><span class="p">()</span>
+<span class="n">dat_b</span><span class="p">,</span><span class="n">b</span> <span class="o">=</span> <span class="nb">bin</span><span class="p">(</span><span class="n">dat</span><span class="p">)</span>
+
+<span class="c1">#### Inferance ####</span>
+<span class="k">with</span> <span class="n">pm</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span> <span class="k">as</span> <span class="n">mod_two</span><span class="p">:</span>
+    <span class="n">inf_alpha</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Uniform</span><span class="p">(</span><span class="s2">&quot;inf_alpha&quot;</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">inf_r_max</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Uniform</span><span class="p">(</span><span class="s2">&quot;inf_r_max&quot;</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>                   
+    <span class="n">inf_kappa_max</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Uniform</span><span class="p">(</span><span class="s2">&quot;inf_kappa_max&quot;</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">upper</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>                 
+
+    <span class="n">inf_r_mu</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Deterministic</span><span class="p">(</span><span class="s2">&quot;inf_r_mu&quot;</span><span class="p">,</span> <span class="n">scale_r_max_mu</span><span class="p">(</span><span class="n">inf_r_max</span><span class="p">,</span><span class="n">l_max</span><span class="p">,</span><span class="n">l_mu</span><span class="p">))</span>
+    <span class="n">inf_kappa_mu</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Deterministic</span><span class="p">(</span><span class="s2">&quot;inf_kappa_mu&quot;</span><span class="p">,</span> <span class="n">scale_kappa_max_mu</span><span class="p">(</span><span class="n">inf_kappa_max</span><span class="p">,</span><span class="n">l_max</span><span class="p">,</span><span class="n">l_mu</span><span class="p">))</span>
+
+    <span class="n">inf_r</span><span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Deterministic</span><span class="p">(</span><span class="s2">&quot;inf_r&quot;</span><span class="p">,</span> <span class="n">scale_r_max_dim</span><span class="p">(</span><span class="n">inf_r_max</span><span class="p">,</span><span class="n">l_max</span><span class="p">))</span>
+    <span class="n">inf_kappa</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Deterministic</span><span class="p">(</span><span class="s2">&quot;inf_kappa&quot;</span><span class="p">,</span> <span class="n">scale_kappa_max_dim</span><span class="p">(</span><span class="n">inf_kappa_max</span><span class="p">,</span><span class="n">l_max</span><span class="p">))</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="n">lpd_p</span><span class="o">.</span><span class="n">pdist</span><span class="p">(</span><span class="n">inf_r_max</span><span class="p">,</span><span class="n">inf_kappa_max</span><span class="p">,</span><span class="n">inf_alpha</span><span class="p">)</span>                                
+    <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">/</span><span class="n">p</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">*</span><span class="n">mt_nr</span>
+    <span class="n">l</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">Poisson</span><span class="p">(</span><span class="s2">&quot;l&quot;</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">observed</span><span class="o">=</span><span class="n">dat_b</span><span class="p">)</span>
+    <span class="n">inf_dat</span> <span class="o">=</span> <span class="n">pm</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">draws</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">tune</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">target_accept</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+
+<span class="c1">#### Document ####</span>
+<span class="n">ad_document</span><span class="p">(</span><span class="n">inf_dat</span><span class="p">,</span><span class="n">mt_nr</span><span class="p">,</span><span class="n">l_max</span><span class="p">,</span><span class="n">l_mu</span><span class="p">)</span>
+<span class="n">ad_make_figures</span><span class="p">(</span><span class="n">inf_dat</span><span class="p">,</span><span class="nb">type</span> <span class="o">=</span> <span class="s2">&quot;mu&quot;</span><span class="p">)</span>
+<span class="n">ad_make_pdist</span><span class="p">(</span><span class="n">inf_dat</span><span class="p">,</span><span class="n">dat_b</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">l_max</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;File Executed&quot;</span><span class="p">)</span>
+
+<span class="c1">########################################## EOF ##########################################</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Katrin Bieglmayer.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

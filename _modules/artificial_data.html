@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>artificial_data &mdash; Bayesian Inference Analysis for Microtubule Length Distribution in Spindles Version 1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Bayesian Inference Analysis for Microtubule Length Distribution in Spindles
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Bayesian Inference Analysis for Microtubule Length Distribution in Spindles; Computational Tool</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Bayesian Inference Analysis for Microtubule Length Distribution in Spindles</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">artificial_data</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for artificial_data</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; This module generates artificial microtubule (MT) length data.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">rand</span><span class="p">,</span> <span class="n">poisson</span><span class="p">,</span> <span class="n">randint</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+
+<span class="c1">########################################## FUNCTIONS ##########################################</span>
+
+<div class="viewcode-block" id="timestep"><a class="viewcode-back" href="../artificial_data.html#artificial_data.timestep">[docs]</a><span class="k">def</span> <span class="nf">timestep</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">dt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Performs a time step of the MT simulation. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - l (numpy.ndarray of float): Array of MT lengths at time t</span>
+<span class="sd">        - dt (float): Time step. </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - out (numpy.ndarray of float): Array of MT lengths at time t+dt.</span>
+<span class="sd">        - count (int): Number of events that happend during the time step.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">l</span><span class="p">,</span><span class="n">c1</span> <span class="o">=</span> <span class="n">turnover</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">dt</span><span class="p">)</span>  
+    <span class="n">l</span><span class="p">,</span><span class="n">c2</span> <span class="o">=</span> <span class="n">severing</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">dt</span><span class="p">)</span>
+    <span class="n">l</span> <span class="o">=</span> <span class="n">growing</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">dt</span><span class="p">)</span> 
+    <span class="n">l</span><span class="p">,</span><span class="n">c3</span> <span class="o">=</span> <span class="n">nucleation</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">dt</span><span class="p">)</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">c1</span><span class="o">+</span><span class="n">c2</span><span class="o">+</span><span class="n">c3</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">l</span>
+    <span class="k">return</span> <span class="n">out</span><span class="p">,</span> <span class="n">count</span></div>
+
+<div class="viewcode-block" id="turnover"><a class="viewcode-back" href="../artificial_data.html#artificial_data.turnover">[docs]</a><span class="k">def</span> <span class="nf">turnover</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">dt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Performs the turnover events in a time step.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - l (numpy.ndarray of float): Array of MT lengths before turnover events.</span>
+<span class="sd">        - dt (float): Time step.  </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - out (numpy.ndarray of float): Array of MT lengths after turnover events.</span>
+<span class="sd">        - count (int): Number of turnover events that happend during the time step.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+    <span class="n">n_r</span> <span class="o">=</span> <span class="n">poisson</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">R</span><span class="o">*</span><span class="n">dt</span><span class="p">)</span>
+    <span class="n">which</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">size</span><span class="o">=</span><span class="n">n_r</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">which</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span> <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span> 
+    <span class="k">return</span> <span class="n">out</span><span class="p">,</span> <span class="n">count</span></div>
+
+
+<div class="viewcode-block" id="severing"><a class="viewcode-back" href="../artificial_data.html#artificial_data.severing">[docs]</a><span class="k">def</span> <span class="nf">severing</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">dt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Performs the severing events in a time step. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - l (numpy.ndarray of float): Array of MT lengths before severing events.</span>
+<span class="sd">        - dt (float): Time step. </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - out (numpy.ndarray of float): Array of MT lengths after severing events.</span>
+<span class="sd">        - count (int): Number of severing events that happend during the time step.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">li</span> <span class="ow">in</span> <span class="n">l</span><span class="p">:</span>
+        <span class="n">n_kappa</span> <span class="o">=</span> <span class="n">poisson</span><span class="p">(</span><span class="n">li</span><span class="o">*</span><span class="n">KAPPA</span><span class="o">*</span><span class="n">dt</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n_kappa</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">li</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">cutpos</span> <span class="o">=</span> <span class="n">li</span><span class="o">*</span><span class="n">rand</span><span class="p">()</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cutpos</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">rand</span><span class="p">()</span><span class="o">&lt;</span><span class="n">ALPHA</span><span class="p">:</span>
+                <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">li</span><span class="o">-</span><span class="n">cutpos</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span><span class="p">,</span> <span class="n">count</span></div>
+
+
+<div class="viewcode-block" id="growing"><a class="viewcode-back" href="../artificial_data.html#artificial_data.growing">[docs]</a><span class="k">def</span> <span class="nf">growing</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">dt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Performs the growth of each MT during a time step. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - l (numpy.ndarray of float): List of MT lengths before growing.</span>
+<span class="sd">        - dt (float): Time step.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - out (numpy.ndarray of float): List of MT lengths after growth.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="n">li</span> <span class="o">+</span> <span class="n">dt</span><span class="o">*</span><span class="n">VG</span> <span class="k">for</span> <span class="n">li</span> <span class="ow">in</span> <span class="n">l</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="nucleation"><a class="viewcode-back" href="../artificial_data.html#artificial_data.nucleation">[docs]</a><span class="k">def</span> <span class="nf">nucleation</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">dt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Performs the nucleation events in a time step.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - l (numpy.ndarray of float): Array of MT lengths before nucelation events.</span>
+<span class="sd">        - dt (float): Time step. </span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - out (numpy.ndarray of float): Array of MT lengths after nucleation events.</span>
+<span class="sd">        - count (int): Number of nucleation events that happend during the time step.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">n_nuc</span> <span class="o">=</span> <span class="n">poisson</span><span class="p">(</span><span class="n">NUC</span><span class="o">*</span><span class="n">dt</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">l</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_nuc</span><span class="p">):</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">out</span><span class="p">,</span> <span class="n">count</span></div>
+
+
+<div class="viewcode-block" id="warmup"><a class="viewcode-back" href="../artificial_data.html#artificial_data.warmup">[docs]</a><span class="k">def</span> <span class="nf">warmup</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">dt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Performs warmup and saves warmup analysis in out/sim_SIM_ID/warmup.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - l (numpy.ndarray of float): Array of MT lengths before warm-up.</span>
+<span class="sd">        - dt (float): Time step during warm-up.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - out (numpy.ndarray of float): Array of MT lengths after warm-up.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#### Warmup ####</span>
+    <span class="n">l_mu</span><span class="p">,</span><span class="n">counts</span><span class="p">,</span><span class="n">mt_nr</span> <span class="o">=</span> <span class="p">[],[],[]</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N_W</span><span class="p">,</span> <span class="n">N_W</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ti</span> <span class="ow">in</span> <span class="n">t</span><span class="p">:</span>
+        <span class="n">mt_nr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">l</span><span class="p">))</span>
+        <span class="n">l_mu</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">l</span><span class="p">))</span>
+        <span class="n">counts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+        <span class="n">l</span><span class="p">,</span><span class="n">count</span> <span class="o">=</span> <span class="n">timestep</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">dt</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">l</span>
+
+    <span class="c1">#### Output ####</span>
+    <span class="n">folder_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">FOLDER_PATH</span><span class="p">,</span> <span class="s2">&quot;warmup&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1">## Analyis/Plots ##</span>
+    <span class="c1">#Plot MTnumber</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">mt_nr</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Number of timesteps&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Number of MT&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="s2">&quot;MTnumber.png&quot;</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1">#Plot MTlength</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">l_mu</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">VG</span><span class="o">/</span><span class="n">R</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;orange&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s2">&quot;mean MT length if kappa = 0&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Number of timesteps&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Mean MT length (µm)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="s2">&quot;MTlength.png&quot;</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1">#Plot MTdistritubtion</span>
+    <span class="n">count</span><span class="p">,</span> <span class="n">bins</span><span class="p">,</span> <span class="n">ignored</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;MT length distibution after warm-up&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Length (µm)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Number of MT&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="s2">&quot;MTdistritubtion.png&quot;</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1">#Plot Events</span>
+    <span class="n">values</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Number of events per timestep&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Count&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">counts</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="s2">&quot;Events.png&quot;</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="simulation"><a class="viewcode-back" href="../artificial_data.html#artificial_data.simulation">[docs]</a><span class="k">def</span> <span class="nf">simulation</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">dt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Performs simulation and saves simulation analysis and artificial data in out/sim_SIM_ID/simulation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - l (numpy.ndarray of float): Array of MT lengths after warm-up/before simulation.</span>
+<span class="sd">        - dt (float): Time step during simulation.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - out (numpy.ndarray of float): Array of MT lengths after simulation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#### Simulation ####</span>
+    <span class="n">l_mu</span><span class="p">,</span><span class="n">mt_nr</span><span class="p">,</span><span class="n">counts</span> <span class="o">=</span> <span class="p">[],[],[]</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N_S</span><span class="p">,</span> <span class="n">N_S</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">REP</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">ti</span> <span class="ow">in</span> <span class="n">t</span><span class="p">:</span>
+            <span class="n">counts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+            <span class="n">mt_nr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">l</span><span class="p">))</span>
+            <span class="n">l_mu</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">l</span><span class="p">))</span>
+            <span class="n">l</span><span class="p">,</span><span class="n">count</span> <span class="o">=</span> <span class="n">timestep</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">dt</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">out</span><span class="p">,</span> <span class="n">l</span><span class="p">))</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1">#### Output ####</span>
+    <span class="n">folder_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">FOLDER_PATH</span><span class="p">,</span> <span class="s2">&quot;simulation&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1">## Artificial data ##</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="s2">&quot;artifical_data.dat&quot;</span><span class="p">)</span>
+    <span class="n">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">out</span><span class="p">:</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">l</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1">## Analyis/Plots ## </span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N_S</span><span class="o">*</span><span class="n">REP</span><span class="p">,</span> <span class="n">N_S</span><span class="o">*</span><span class="n">REP</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1">#Plot MTnumber</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">REP</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">N_S</span><span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">mt_nr</span><span class="p">[</span><span class="n">N_S</span><span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span><span class="n">zorder</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="s2">&quot;MT length output&quot;</span><span class="p">],</span> <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper left&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">mt_nr</span><span class="p">,</span><span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Number of timesteps&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Number of MT&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="s2">&quot;MTnumber.png&quot;</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="c1">#Plot MTlength</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">VG</span><span class="o">/</span><span class="n">R</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;orange&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span><span class="n">zorder</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">REP</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">N_S</span><span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">l_mu</span><span class="p">[</span><span class="n">N_S</span><span class="o">*</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span><span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="s2">&quot;mean MT length if kappa = 0&quot;</span><span class="p">,</span><span class="s2">&quot;MT length output&quot;</span><span class="p">],</span> <span class="n">loc</span><span class="o">=</span><span class="s2">&quot;upper left&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">l_mu</span><span class="p">,</span><span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Number of timesteps&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Mean MT length (µm)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="s2">&quot;MTlength.png&quot;</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1">#Plot MTdistritubtion</span>
+    <span class="n">count</span><span class="p">,</span> <span class="n">bins</span><span class="p">,</span> <span class="n">ignored</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;MT length distibution after simulation&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Length (µm)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Count (normalized)&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="s2">&quot;MTdistritubtion.png&quot;</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1">#Plot Events</span>
+    <span class="n">values</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Number of events per timestep&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Count&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">counts</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder_path</span><span class="p">,</span> <span class="s2">&quot;Events.png&quot;</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="scale_r_dim_max"><a class="viewcode-back" href="../artificial_data.html#artificial_data.scale_r_dim_max">[docs]</a><span class="k">def</span> <span class="nf">scale_r_dim_max</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Performs paramerter transformation from of the turnover rate from r (1/s) to r_max (-).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - l (numpy.ndarray of float): Array of MT lengths.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - r_max (float): Non dimensional turnover rate (-), scaled with l_max.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">r_max</span> <span class="o">=</span> <span class="n">R</span><span class="o">*</span><span class="nb">max</span><span class="p">(</span><span class="n">l</span><span class="p">)</span><span class="o">/</span><span class="n">VG</span>
+    <span class="k">return</span> <span class="n">r_max</span></div>
+
+<div class="viewcode-block" id="scale_r_dim_mu"><a class="viewcode-back" href="../artificial_data.html#artificial_data.scale_r_dim_mu">[docs]</a><span class="k">def</span> <span class="nf">scale_r_dim_mu</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Performs paramerter transformation from of the turnover rate from r (1/s) to r_mu (-).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - l (numpy.ndarray of float): Array of MT lengths.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - r_mu (float): Non dimensional turnover rate (-), scaled with l_mu.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">r_mu</span> <span class="o">=</span> <span class="n">R</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">l</span><span class="p">)</span><span class="o">/</span><span class="n">VG</span>
+    <span class="k">return</span> <span class="n">r_mu</span></div>
+
+<div class="viewcode-block" id="scale_kappa_dim_max"><a class="viewcode-back" href="../artificial_data.html#artificial_data.scale_kappa_dim_max">[docs]</a><span class="k">def</span> <span class="nf">scale_kappa_dim_max</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Performs paramerter transformation from of the severing rate from kappa (1/µm s) to kappa_max (-).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - l (numpy.ndarray of float): Array of MT lengths.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - kappa_max (float): Non dimensional turnover rate (-), scaled with l_max.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">kappa_max</span> <span class="o">=</span> <span class="n">KAPPA</span><span class="o">*</span><span class="nb">max</span><span class="p">(</span><span class="n">l</span><span class="p">)</span><span class="o">/</span><span class="n">VG</span>
+    <span class="k">return</span> <span class="n">kappa_max</span></div>
+
+<div class="viewcode-block" id="scale_kappa_dim_mu"><a class="viewcode-back" href="../artificial_data.html#artificial_data.scale_kappa_dim_mu">[docs]</a><span class="k">def</span> <span class="nf">scale_kappa_dim_mu</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Performs paramerter transformation from of the severing rate from kappa (1/µm s) to kappa_mu (-).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - l (numpy.ndarray of float): Array of MT lengths.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - kappa_mu (float): Non dimensional turnover rate (-), scaled with l_mu.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">kappa_mu</span> <span class="o">=</span> <span class="n">KAPPA</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">l</span><span class="p">)</span><span class="o">/</span><span class="n">VG</span>
+    <span class="k">return</span> <span class="n">kappa_mu</span></div>
+
+<div class="viewcode-block" id="document"><a class="viewcode-back" href="../artificial_data.html#artificial_data.document">[docs]</a><span class="k">def</span> <span class="nf">document</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Saves all relevant parameters of the simulation in out/sim_documentation.dat.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        - l (numpy.ndarray of float): Array of MT lengths after simulation.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        - None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">variables</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;SIM_ID&quot;</span><span class="p">:</span> <span class="n">SIM_ID</span><span class="p">,</span>                                   <span class="c1">#Simulation ID</span>
+        <span class="s2">&quot;mt_nr&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="p">),</span>                                    <span class="c1">#Number of MT</span>
+        <span class="s2">&quot;l_max (</span><span class="se">\u03BC</span><span class="s2">m)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">l</span><span class="p">),</span><span class="mi">3</span><span class="p">),</span>                 <span class="c1">#Max MT length of distribution (µm)</span>
+        <span class="s2">&quot;l_mu (</span><span class="se">\u03BC</span><span class="s2">m)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">l</span><span class="p">),</span><span class="mi">3</span><span class="p">),</span>              <span class="c1">#Mean MT length of distribution (µm)</span>
+        <span class="s2">&quot;ALPHA (-)&quot;</span><span class="p">:</span> <span class="n">ALPHA</span><span class="p">,</span>                                 <span class="c1">#Stability parameter (-)</span>
+        <span class="s2">&quot;R (1/s)&quot;</span><span class="p">:</span> <span class="n">R</span><span class="p">,</span>                                       <span class="c1">#Turnover rate (1/s)</span>
+        <span class="s2">&quot;KAPPA (1/</span><span class="se">\u03BC</span><span class="s2">m s)&quot;</span><span class="p">:</span> <span class="n">KAPPA</span><span class="p">,</span>                       <span class="c1">#Severing rate (1/µm s)</span>
+        <span class="s2">&quot;r_max (-)&quot;</span> <span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">scale_r_dim_max</span><span class="p">(</span><span class="n">l</span><span class="p">),</span><span class="mi">2</span><span class="p">),</span>          <span class="c1">#Non dimensional turnover rate (-), scaled with l_max</span>
+        <span class="s2">&quot;kappa_max (-)&quot;</span> <span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">scale_kappa_dim_max</span><span class="p">(</span><span class="n">l</span><span class="p">),</span><span class="mi">2</span><span class="p">),</span>  <span class="c1">#Non dimensional severing rate (-), scaled with l_max</span>
+        <span class="s2">&quot;r_mu (-)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">scale_r_dim_mu</span><span class="p">(</span><span class="n">l</span><span class="p">),</span><span class="mi">2</span><span class="p">),</span>             <span class="c1">#Non dimensional turnover rate (-), scaled with l_mu</span>
+        <span class="s2">&quot;kappa_mu (-)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">scale_kappa_dim_mu</span><span class="p">(</span><span class="n">l</span><span class="p">),</span><span class="mi">2</span><span class="p">),</span>     <span class="c1">#Non dimensional severing rate (-), scaled with l_mu</span>
+        <span class="s2">&quot;VG (</span><span class="se">\u03BC</span><span class="s2">m/s)&quot;</span><span class="p">:</span> <span class="n">VG</span><span class="p">,</span>                               <span class="c1">#Growth velocity (µm/s)</span>
+        <span class="s2">&quot;NUC (1/s)&quot;</span><span class="p">:</span> <span class="n">NUC</span><span class="p">,</span>                                   <span class="c1">#Nucleation rate (1/s)</span>
+        <span class="s2">&quot;N0&quot;</span><span class="p">:</span> <span class="n">N0</span><span class="p">,</span>                                           <span class="c1">#Initial number of MT</span>
+        <span class="s2">&quot;DT_W (s/timestep)&quot;</span><span class="p">:</span> <span class="n">DT_W</span><span class="p">,</span>                          <span class="c1">#Timestep during warm up (s/timestep)</span>
+        <span class="s2">&quot;N_W&quot;</span><span class="p">:</span> <span class="n">N_W</span><span class="p">,</span>                                         <span class="c1">#Number of timesteps during warm up</span>
+        <span class="s2">&quot;DT_S (s/timestep)&quot;</span><span class="p">:</span> <span class="n">DT_S</span><span class="p">,</span>                          <span class="c1">#Timestep during simulation (s/timestep)</span>
+        <span class="s2">&quot;N_S&quot;</span><span class="p">:</span> <span class="n">N_S</span><span class="p">,</span>                                         <span class="c1">#Number of timesteps between length distribution output(s)</span>
+        <span class="s2">&quot;REP&quot;</span><span class="p">:</span> <span class="n">REP</span><span class="p">,</span>                                         <span class="c1">#Number of length distribution outputs</span>
+        <span class="s2">&quot;Comment&quot;</span><span class="p">:</span> <span class="n">COMMENT</span>                                  <span class="c1">#Comment </span>
+    <span class="p">}</span>
+
+    <span class="n">out_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()),</span> <span class="s2">&quot;out&quot;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">out_directory</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_directory</span><span class="p">,</span> <span class="s2">&quot;sim_documentation.dat&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">variables</span><span class="p">[</span><span class="n">var</span><span class="p">])</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">]</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">headings</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">variables</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">variables</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">headings</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">values</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+<span class="c1">########################################## MAIN ##########################################</span>
+
+<span class="sd">&quot;&quot;&quot;Define MT parameters, Initals, Parameters of simulation and Comment here.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+    
+<span class="c1">### Make paths ###</span>
+<span class="c1">#SIM_ID = &quot;sim_&quot; + datetime.datetime.now().strftime(&quot;%y%m%d%H%M%S&quot;)</span>
+<span class="n">SIM_ID</span> <span class="o">=</span> <span class="s2">&quot;sim_SIM_ID&quot;</span>
+<span class="n">FOLDER_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()),</span> <span class="s2">&quot;out&quot;</span><span class="p">,</span> <span class="n">SIM_ID</span><span class="p">)</span>
+<span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">FOLDER_PATH</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1">#### MT parameters ####</span>
+<span class="n">R</span> <span class="o">=</span> <span class="mf">0.7</span>                                 <span class="c1">#Turnover rate (1/s)</span>
+<span class="n">KAPPA</span> <span class="o">=</span> <span class="mi">0</span>                               <span class="c1">#Severing rate (1/µm s)</span>
+<span class="n">ALPHA</span> <span class="o">=</span> <span class="mf">0.5</span>                             <span class="c1">#Stability parameter (-)</span>
+<span class="n">VG</span> <span class="o">=</span> <span class="mi">1</span>                                  <span class="c1">#Growth velocity (µm/s)</span>
+<span class="n">NUC</span> <span class="o">=</span> <span class="mi">1000</span>                              <span class="c1">#Nucleation rate (1/s)</span>
+
+<span class="c1">#### Initals ####</span>
+<span class="n">N0</span> <span class="o">=</span> <span class="mi">1</span>                                  <span class="c1">#Initial number of MT</span>
+<span class="n">l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N0</span><span class="p">)</span>                        <span class="c1">#Initial length distribution</span>
+
+<span class="c1">#### Parameters of simulation #### </span>
+<span class="n">DT_W</span> <span class="o">=</span> <span class="mf">0.01</span>                             <span class="c1">#Timestep during warm up (s/timestep)</span>
+<span class="n">N_W</span> <span class="o">=</span> <span class="mi">2</span>                                 <span class="c1">#Number of timesteps during warm up</span>
+<span class="n">DT_S</span> <span class="o">=</span> <span class="mf">0.001</span>                            <span class="c1">#Timestep during simulation (s/timestep)             </span>
+<span class="n">N_S</span> <span class="o">=</span> <span class="mi">2</span>                                 <span class="c1">#Number of timesteps between length distribution output(s)</span>
+<span class="n">REP</span> <span class="o">=</span> <span class="mi">4</span>                                 <span class="c1">#Number of length distribution outputs</span>
+
+<span class="n">COMMENT</span> <span class="o">=</span> <span class="s2">&quot;Here could be your Comment&quot;</span>
+
+<span class="n">l</span> <span class="o">=</span> <span class="n">warmup</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">DT_W</span><span class="p">)</span>
+<span class="n">l</span> <span class="o">=</span> <span class="n">simulation</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">DT_S</span><span class="p">)</span>
+<span class="n">document</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;File Executed&quot;</span><span class="p">)</span>
+
+<span class="c1">########################################## EOF ##########################################</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Katrin Bieglmayer.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

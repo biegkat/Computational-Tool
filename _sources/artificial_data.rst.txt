@@ -1,0 +1,7 @@
+artificial\_data module
+=======================
+
+.. automodule:: artificial_data
+   :members:
+   :undoc-members:
+   :show-inheritance:

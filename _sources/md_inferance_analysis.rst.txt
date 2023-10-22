@@ -1,0 +1,7 @@
+md\_inferance\_analysis module
+==============================
+
+.. automodule:: md_inferance_analysis
+   :members:
+   :undoc-members:
+   :show-inheritance:
