@@ -92,8 +92,8 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        - dat (numpy.ndarray of float): data (MT lengths) scaled to the max length.</span>
-<span class="sd">        - l_mu (float): Mean MT lenght in data (MT lengths).</span>
-<span class="sd">        - l_max (float): Max MT lenght in data (MT lengths).</span>
+<span class="sd">        - l_mu (float): Mean MT length in data (MT lengths).</span>
+<span class="sd">        - l_max (float): Max MT length in data (MT lengths).</span>
 <span class="sd">        - mt_nr (int): Number of MT in data (MT lengths).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -126,8 +126,8 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        - r_max (float): Non dimensional turnover rate (-), scaled with l_max.</span>
-<span class="sd">        - l_max (float): Max MT lenght in p% of data.</span>
-<span class="sd">        - l_mu (float): Mean MT lenght in p% of data.</span>
+<span class="sd">        - l_max (float): Max MT length in p% of data.</span>
+<span class="sd">        - l_mu (float): Mean MT length in p% of data.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        - r_mu (float): Non dimensional turnover rate (-), scaled with l_mu.</span>
@@ -140,8 +140,8 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        - kappa_max (float): Non dimensional severing rate (-), scaled with l_max.</span>
-<span class="sd">        - l_max (float): Max MT lenght in p% of data.</span>
-<span class="sd">        - l_mu (float): Mean MT lenght in p% of data.</span>
+<span class="sd">        - l_max (float): Max MT length in p% of data.</span>
+<span class="sd">        - l_mu (float): Mean MT length in p% of data.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        - kappa_mu (float): Non dimensional severing rate (-), scaled with l_mu.</span>
@@ -155,8 +155,8 @@
 <span class="sd">    Args:</span>
 <span class="sd">        - inf_dat (arviz.data.inference_data.InferenceData): Object that contains the samples.</span>
 <span class="sd">        - mt_nr (int): Number of MT in p% of data (MT lengths).</span>
-<span class="sd">        - l_mu (float): Mean MT lenght in p% of data (MT lengths).</span>
-<span class="sd">        - l_max (float): Max MT lenght in p% of data (MT lengths).</span>
+<span class="sd">        - l_mu (float): Mean MT length in p% of data (MT lengths).</span>
+<span class="sd">        - l_max (float): Max MT length in p% of data (MT lengths).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        - None</span>
@@ -166,8 +166,8 @@
     <span class="n">variables</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;INF_ID&quot;</span><span class="p">:</span> <span class="n">INF_ID</span><span class="p">,</span>                                          <span class="c1">#Inferance ID</span>
         <span class="s2">&quot;mt_nr&quot;</span><span class="p">:</span> <span class="n">mt_nr</span><span class="p">,</span>                                            <span class="c1">#Number of MT in p% of data                 </span>
-        <span class="s2">&quot;l_max (</span><span class="se">\u03BC</span><span class="s2">m)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">l_max</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span>                         <span class="c1">#Max MT lenght in p% of data               </span>
-        <span class="s2">&quot;l_mu (</span><span class="se">\u03BC</span><span class="s2">m)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">l_mu</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span>                           <span class="c1">#Mean MT lenght in p% of data</span>
+        <span class="s2">&quot;l_max (</span><span class="se">\u03BC</span><span class="s2">m)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">l_max</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span>                         <span class="c1">#Max MT length in p% of data               </span>
+        <span class="s2">&quot;l_mu (</span><span class="se">\u03BC</span><span class="s2">m)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">l_mu</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span>                           <span class="c1">#Mean MT length in p% of data</span>
         <span class="s2">&quot;alpha_inf (-)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">),</span>                 <span class="c1">#Inferred stability parameter (-)</span>
         <span class="s2">&quot;inf_r_max (-)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">),</span>                 <span class="c1">#Inferred non dimensional turnover rate (-), scaled with l_max</span>
         <span class="s2">&quot;inf_kappa_max (-)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">),</span>             <span class="c1">#Inferred non dimensional severing rate (-), scaled with l_max</span>
@@ -258,7 +258,7 @@
 <span class="sd">        - inf_dat (arviz.data.inference_data.InferenceData): Object that contains the samples.</span>
 <span class="sd">        - dat_b (numpy.ndarray of int): Binned data (MT lengths).</span>
 <span class="sd">        - b (numpy.ndarray of float): Position of bins.</span>
-<span class="sd">        - l_max (float): Max MT lenght in p% of data (MT lengths).</span>
+<span class="sd">        - l_max (float): Max MT length in p% of data (MT lengths).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        - None</span>

@@ -106,8 +106,8 @@ The ‘load_data()’ function has to be modified depending on the format of you
 <dt>Args:</dt><dd><ul class="simple">
 <li><p>inf_dat (arviz.data.inference_data.InferenceData): Object that contains the samples.</p></li>
 <li><p>mt_nr (int): Number of MT in p% of data (MT lengths).</p></li>
-<li><p>l_mu (float): Mean MT lenght in p% of data (MT lengths).</p></li>
-<li><p>l_max (float): Max MT lenght in p% of data (MT lengths).</p></li>
+<li><p>l_mu (float): Mean MT length in p% of data (MT lengths).</p></li>
+<li><p>l_max (float): Max MT length in p% of data (MT lengths).</p></li>
 </ul>
 </dd>
 <dt>Returns:</dt><dd><ul class="simple">
@@ -128,8 +128,8 @@ The ‘load_data()’ function has to be modified depending on the format of you
 </dd>
 <dt>Returns:</dt><dd><ul class="simple">
 <li><p>dat (numpy.ndarray of float): data (MT lengths) scaled to the max length.</p></li>
-<li><p>l_mu (float): Mean MT lenght in data (MT lengths).</p></li>
-<li><p>l_max (float): Max MT lenght in data (MT lengths).</p></li>
+<li><p>l_mu (float): Mean MT length in data (MT lengths).</p></li>
+<li><p>l_max (float): Max MT length in data (MT lengths).</p></li>
 <li><p>mt_nr (int): Number of MT in data (MT lengths).</p></li>
 </ul>
 </dd>
@@ -162,7 +162,7 @@ The ‘load_data()’ function has to be modified depending on the format of you
 <li><p>inf_dat (arviz.data.inference_data.InferenceData): Object that contains the samples.</p></li>
 <li><p>dat_b (numpy.ndarray of int): Binned data (MT lengths).</p></li>
 <li><p>b (numpy.ndarray of float): Position of bins.</p></li>
-<li><p>l_max (float): Max MT lenght in p% of data (MT lengths).</p></li>
+<li><p>l_max (float): Max MT length in p% of data (MT lengths).</p></li>
 </ul>
 </dd>
 <dt>Returns:</dt><dd><ul class="simple">
@@ -179,8 +179,8 @@ The ‘load_data()’ function has to be modified depending on the format of you
 <dl class="simple">
 <dt>Args:</dt><dd><ul class="simple">
 <li><p>kappa_max (float): Non dimensional severing rate (-), scaled with l_max.</p></li>
-<li><p>l_max (float): Max MT lenght in p% of data.</p></li>
-<li><p>l_mu (float): Mean MT lenght in p% of data.</p></li>
+<li><p>l_max (float): Max MT length in p% of data.</p></li>
+<li><p>l_mu (float): Mean MT length in p% of data.</p></li>
 </ul>
 </dd>
 <dt>Returns:</dt><dd><ul class="simple">
@@ -197,8 +197,8 @@ The ‘load_data()’ function has to be modified depending on the format of you
 <dl class="simple">
 <dt>Args:</dt><dd><ul class="simple">
 <li><p>r_max (float): Non dimensional turnover rate (-), scaled with l_max.</p></li>
-<li><p>l_max (float): Max MT lenght in p% of data.</p></li>
-<li><p>l_mu (float): Mean MT lenght in p% of data.</p></li>
+<li><p>l_max (float): Max MT length in p% of data.</p></li>
+<li><p>l_mu (float): Mean MT length in p% of data.</p></li>
 </ul>
 </dd>
 <dt>Returns:</dt><dd><ul class="simple">

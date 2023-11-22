@@ -69,13 +69,13 @@
              
   <h1>Source code for lpd_pytensor</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;This module solves a second order differntial equation to calculate the steady state</span>
-<span class="sd">microtubule (MT) lenght disribution given &#39;pytensor.tensor.var.TensorVariable&#39; parameters.</span>
+<span class="sd">microtubule (MT) length disribution given &#39;pytensor.tensor.var.TensorVariable&#39; parameters.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pytensor.tensor</span> <span class="k">as</span> <span class="nn">pt</span>
 
-<span class="n">NL</span> <span class="o">=</span> <span class="mi">100</span>
-<span class="n">LMAX</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="n">NL</span> <span class="o">=</span> <span class="mi">100</span>                    <span class="c1">#Number of grid points</span>
+<span class="n">LMAX</span> <span class="o">=</span> <span class="mf">1.0</span>                  <span class="c1">#LMAX=1 -&gt; using scaled parameters</span>
 <span class="n">delta</span> <span class="o">=</span> <span class="n">LMAX</span><span class="o">/</span><span class="p">(</span><span class="n">NL</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="c1">### Define first derivative (pytensor) ###</span>

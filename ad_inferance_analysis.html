@@ -88,9 +88,9 @@
 <dl class="simple">
 <dt>Args:</dt><dd><ul class="simple">
 <li><p>inf_dat (arviz.data.inference_data.InferenceData): Object that contains the samples.</p></li>
-<li><p>mt_nr (int): Number of MT in p% of data (MT lengths).</p></li>
-<li><p>l_mu (float): Mean MT lenght in p% of data (MT lengths).</p></li>
-<li><p>l_max (float): Max MT lenght in p% of data (MT lengths).</p></li>
+<li><p>mt_nr (int): Number of MT.</p></li>
+<li><p>l_mu (float): Mean MT length of n/all data entries (MT lengths).</p></li>
+<li><p>l_max (float): Max MT length of n/all data entries (MT lengths).</p></li>
 </ul>
 </dd>
 <dt>Returns:</dt><dd><ul class="simple">
@@ -102,18 +102,18 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="ad_inferance_analysis.ad_load_data">
-<span class="sig-prename descclassname"><span class="pre">ad_inferance_analysis.</span></span><span class="sig-name descname"><span class="pre">ad_load_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ad_inferance_analysis.html#ad_load_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ad_inferance_analysis.ad_load_data" title="Permalink to this definition"></a></dt>
-<dd><p>Loads random p% of data (MT lengths) from DATA_PATH and scales it to the max length.</p>
+<span class="sig-prename descclassname"><span class="pre">ad_inferance_analysis.</span></span><span class="sig-name descname"><span class="pre">ad_load_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ad_inferance_analysis.html#ad_load_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ad_inferance_analysis.ad_load_data" title="Permalink to this definition"></a></dt>
+<dd><p>Loads random all entries (MT lengths) from DATA_PATH if n=0, or n enrties if n != 0 and scales it to the max length.</p>
 <dl class="simple">
 <dt>Args:</dt><dd><ul class="simple">
-<li><p>p (float): Percent of the data (MT lengths) that is loaded to be used in the inferance.</p></li>
+<li><p>n (int): Number of entries to be loaded. If no arg is given, n defaults to 0 and all data is loaded.</p></li>
 </ul>
 </dd>
 <dt>Returns:</dt><dd><ul class="simple">
-<li><p>dat (numpy.ndarray of float): p% of data (MT lengths) scaled to the max length.</p></li>
-<li><p>l_mu (float): Mean MT lenght in p% of data (MT lengths).</p></li>
-<li><p>l_max (float): Max MT lenght in p% of data (MT lengths).</p></li>
-<li><p>mt_nr (int): Number of MT in p% of data (MT lengths).</p></li>
+<li><p>dat (numpy.ndarray of float): n/all data entries (MT lengths) scaled to the max length.</p></li>
+<li><p>l_mu (float): Mean MT length of n/all data entries (MT lengths).</p></li>
+<li><p>l_max (float): Max MT length of n/all data entries (MT lengths).</p></li>
+<li><p>mt_nr (int): Number of MT.</p></li>
 </ul>
 </dd>
 </dl>
@@ -145,7 +145,7 @@
 <li><p>inf_dat (arviz.data.inference_data.InferenceData): Object that contains the samples.</p></li>
 <li><p>dat_b (numpy.ndarray of int): Binned data (MT lengths).</p></li>
 <li><p>b (numpy.ndarray of float): Position of bins.</p></li>
-<li><p>l_max (float): Max MT lenght in p% of data (MT lengths).</p></li>
+<li><p>l_max (float): Max MT length in p% of data (MT lengths).</p></li>
 </ul>
 </dd>
 <dt>Returns:</dt><dd><ul class="simple">
@@ -198,7 +198,7 @@
 <dl class="simple">
 <dt>Args:</dt><dd><ul class="simple">
 <li><p>kappa_max (float): Non dimensional severing rate (-), scaled with l_max.</p></li>
-<li><p>l_max (float): Max MT lenght in p% of data.</p></li>
+<li><p>l_max (float): Max MT length of n/all data entries (MT lengths).</p></li>
 </ul>
 </dd>
 <dt>Returns:</dt><dd><ul class="simple">
@@ -215,8 +215,8 @@
 <dl class="simple">
 <dt>Args:</dt><dd><ul class="simple">
 <li><p>kappa_max (float): Non dimensional severing rate (-), scaled with l_max.</p></li>
-<li><p>l_max (float): Max MT lenght in p% of data.</p></li>
-<li><p>l_mu (float): Mean MT lenght in p% of data.</p></li>
+<li><p>l_mu (float): Mean MT length of n/all data entries (MT lengths).</p></li>
+<li><p>l_max (float): Max MT length of n/all data entries (MT lengths).</p></li>
 </ul>
 </dd>
 <dt>Returns:</dt><dd><ul class="simple">
@@ -233,7 +233,7 @@
 <dl class="simple">
 <dt>Args:</dt><dd><ul class="simple">
 <li><p>r_max (float): Non dimensional turnover rate (-), scaled with l_max.</p></li>
-<li><p>l_max (float): Max MT lenght in p% of data.</p></li>
+<li><p>l_max (float): Max MT length of n/all data entries (MT lengths).</p></li>
 </ul>
 </dd>
 <dt>Returns:</dt><dd><ul class="simple">
@@ -250,8 +250,8 @@
 <dl class="simple">
 <dt>Args:</dt><dd><ul class="simple">
 <li><p>r_max (float): Non dimensional turnover rate (-), scaled with l_max.</p></li>
-<li><p>l_max (float): Max MT lenght in p% of data.</p></li>
-<li><p>l_mu (float): Mean MT lenght in p% of data.</p></li>
+<li><p>l_mu (float): Mean MT length of n/all data entries (MT lengths).</p></li>
+<li><p>l_max (float): Max MT length of n/all data entries (MT lengths).</p></li>
 </ul>
 </dd>
 <dt>Returns:</dt><dd><ul class="simple">

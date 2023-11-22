@@ -82,17 +82,17 @@
 
 <span class="c1">########################################## FUNCTIONS ##########################################</span>
 
-<div class="viewcode-block" id="ad_load_data"><a class="viewcode-back" href="../ad_inferance_analysis.html#ad_inferance_analysis.ad_load_data">[docs]</a><span class="k">def</span> <span class="nf">ad_load_data</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Loads random p% of data (MT lengths) from DATA_PATH and scales it to the max length.</span>
+<div class="viewcode-block" id="ad_load_data"><a class="viewcode-back" href="../ad_inferance_analysis.html#ad_inferance_analysis.ad_load_data">[docs]</a><span class="k">def</span> <span class="nf">ad_load_data</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Loads random all entries (MT lengths) from DATA_PATH if n=0, or n enrties if n != 0 and scales it to the max length.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        - p (float): Percent of the data (MT lengths) that is loaded to be used in the inferance. </span>
+<span class="sd">        - n (int): Number of entries to be loaded. If no arg is given, n defaults to 0 and all data is loaded.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        - dat (numpy.ndarray of float): p% of data (MT lengths) scaled to the max length.</span>
-<span class="sd">        - l_mu (float): Mean MT lenght in p% of data (MT lengths).</span>
-<span class="sd">        - l_max (float): Max MT lenght in p% of data (MT lengths).</span>
-<span class="sd">        - mt_nr (int): Number of MT in p% of data (MT lengths).</span>
+<span class="sd">        - dat (numpy.ndarray of float): n/all data entries (MT lengths) scaled to the max length.</span>
+<span class="sd">        - l_mu (float): Mean MT length of n/all data entries (MT lengths).</span>
+<span class="sd">        - l_max (float): Max MT length of n/all data entries (MT lengths).</span>
+<span class="sd">        - mt_nr (int): Number of MT.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">dat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">DATA_PATH</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
@@ -103,11 +103,12 @@
     <span class="n">file</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">DATA_PATH</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="nb">float</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
         <span class="n">dat</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dat</span><span class="p">)</span>
+    <span class="n">dat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">l_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">dat</span><span class="p">)</span>
     <span class="n">l_mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dat</span><span class="p">)</span>
     <span class="n">mt_nr</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dat</span><span class="p">)</span>
     <span class="n">dat</span> <span class="o">=</span> <span class="n">dat</span><span class="o">/</span><span class="n">l_max</span>
-    <span class="n">dat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">dat</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">mt_nr</span><span class="o">*</span><span class="n">p</span><span class="p">),</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">dat</span><span class="p">,</span> <span class="n">l_mu</span><span class="p">,</span> <span class="n">l_max</span><span class="p">,</span> <span class="n">mt_nr</span></div>
 
 <div class="viewcode-block" id="bin"><a class="viewcode-back" href="../ad_inferance_analysis.html#ad_inferance_analysis.bin">[docs]</a><span class="k">def</span> <span class="nf">bin</span><span class="p">(</span><span class="n">dat</span><span class="p">):</span>
@@ -128,7 +129,7 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        - r_max (float): Non dimensional turnover rate (-), scaled with l_max.</span>
-<span class="sd">        - l_max (float): Max MT lenght in p% of data.</span>
+<span class="sd">        - l_max (float): Max MT length of n/all data entries (MT lengths).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        - r (float): Turnover rate (1/s).</span>
@@ -142,7 +143,7 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        - kappa_max (float): Non dimensional severing rate (-), scaled with l_max.</span>
-<span class="sd">        - l_max (float): Max MT lenght in p% of data.</span>
+<span class="sd">        - l_max (float): Max MT length of n/all data entries (MT lengths).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        - kappa (float): Severing rate (1/µm s).</span>
@@ -156,8 +157,8 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        - r_max (float): Non dimensional turnover rate (-), scaled with l_max.</span>
-<span class="sd">        - l_max (float): Max MT lenght in p% of data.</span>
-<span class="sd">        - l_mu (float): Mean MT lenght in p% of data.</span>
+<span class="sd">        - l_mu (float): Mean MT length of n/all data entries (MT lengths).</span>
+<span class="sd">        - l_max (float): Max MT length of n/all data entries (MT lengths).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        - r_mu (float): Non dimensional turnover rate (-), scaled with l_mu.</span>
@@ -170,8 +171,8 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        - kappa_max (float): Non dimensional severing rate (-), scaled with l_max.</span>
-<span class="sd">        - l_max (float): Max MT lenght in p% of data.</span>
-<span class="sd">        - l_mu (float): Mean MT lenght in p% of data.</span>
+<span class="sd">        - l_mu (float): Mean MT length of n/all data entries (MT lengths).</span>
+<span class="sd">        - l_max (float): Max MT length of n/all data entries (MT lengths).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        - kappa_mu (float): Non dimensional severing rate (-), scaled with l_mu.</span>
@@ -211,9 +212,9 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        - inf_dat (arviz.data.inference_data.InferenceData): Object that contains the samples.</span>
-<span class="sd">        - mt_nr (int): Number of MT in p% of data (MT lengths).</span>
-<span class="sd">        - l_mu (float): Mean MT lenght in p% of data (MT lengths).</span>
-<span class="sd">        - l_max (float): Max MT lenght in p% of data (MT lengths).</span>
+<span class="sd">        - mt_nr (int): Number of MT.</span>
+<span class="sd">        - l_mu (float): Mean MT length of n/all data entries (MT lengths).</span>
+<span class="sd">        - l_max (float): Max MT length of n/all data entries (MT lengths).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        - None</span>
@@ -224,8 +225,8 @@
         <span class="s2">&quot;SIM_ID&quot;</span><span class="p">:</span> <span class="n">SIM_ID</span><span class="p">,</span>                                          <span class="c1">#Simulation ID</span>
         <span class="s2">&quot;INF_ID&quot;</span><span class="p">:</span> <span class="n">INF_ID</span><span class="p">,</span>                                          <span class="c1">#Inferance ID</span>
         <span class="s2">&quot;mt_nr&quot;</span><span class="p">:</span> <span class="n">mt_nr</span><span class="p">,</span>                                            <span class="c1">#Number of MT in p% of data                 </span>
-        <span class="s2">&quot;l_max (</span><span class="se">\u03BC</span><span class="s2">m)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">l_max</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span>                         <span class="c1">#Max MT lenght in p% of data               </span>
-        <span class="s2">&quot;l_mu (</span><span class="se">\u03BC</span><span class="s2">m)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">l_mu</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span>                           <span class="c1">#Mean MT lenght in p% of data</span>
+        <span class="s2">&quot;l_max (</span><span class="se">\u03BC</span><span class="s2">m)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">l_max</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span>                         <span class="c1">#Max MT length in p% of data               </span>
+        <span class="s2">&quot;l_mu (</span><span class="se">\u03BC</span><span class="s2">m)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">l_mu</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span>                           <span class="c1">#Mean MT length in p% of data</span>
         <span class="s2">&quot;alpha_inf (-)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">),</span>                 <span class="c1">#Inferred stability parameter (-)</span>
         <span class="s2">&quot;inf_r (1/s)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">),</span>                   <span class="c1">#Inferred turnover rate (1/s)</span>
         <span class="s2">&quot;inf_kappa (1/</span><span class="se">\u03BC</span><span class="s2">m s)&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">),</span>       <span class="c1">#Inferred severing rate (1/µm s)</span>
@@ -314,7 +315,7 @@
 <span class="sd">        - inf_dat (arviz.data.inference_data.InferenceData): Object that contains the samples.</span>
 <span class="sd">        - dat_b (numpy.ndarray of int): Binned data (MT lengths).</span>
 <span class="sd">        - b (numpy.ndarray of float): Position of bins.</span>
-<span class="sd">        - l_max (float): Max MT lenght in p% of data (MT lengths).</span>
+<span class="sd">        - l_max (float): Max MT length in p% of data (MT lengths).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        - None</span>
